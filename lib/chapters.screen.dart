@@ -1,0 +1,143 @@
+import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:open_filex/open_filex.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+class ChaptersScreen extends StatefulWidget {
+  const ChaptersScreen({super.key});
+
+  @override
+  State<ChaptersScreen> createState() => _ChaptersScreenState();
+}
+
+class _ChaptersScreenState extends State<ChaptersScreen> {
+  List<String> chapters = [];
+  bool isChaptersLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    Future.delayed(Duration.zero, openCurrentChapter);
+  }
+
+  void openCurrentChapter() async {
+    final prefs = await SharedPreferences.getInstance();
+    final currentChapter = prefs.getString('current-chapter');
+    if (currentChapter != null) {
+      // ignore: use_build_context_synchronously
+      final file = await createFileOfPdfUrl(currentChapter);
+      await OpenFilex.open(file.path);
+    } else {
+      fetchAllCapters();
+    }
+  }
+
+  Future<File> createFileOfPdfUrl(String chapter) async {
+    Completer<File> completer = Completer();
+    try {
+      final url =
+          "https://charlie-wade-production-charliewadebucketbucket-hbcaevbr.s3.ap-south-1.amazonaws.com/$chapter";
+      final filename = url.substring(url.lastIndexOf("/") + 1);
+
+      var dir = await getApplicationDocumentsDirectory();
+      File file = File("${dir.path}/$filename");
+
+      if (await file.exists()) {
+        return file;
+      }
+
+      var request = await HttpClient().getUrl(Uri.parse(url));
+      var response = await request.close();
+      var bytes = await consolidateHttpClientResponseBytes(response);
+
+      await file.writeAsBytes(bytes, flush: true);
+      completer.complete(file);
+    } catch (e) {
+      throw Exception('Error parsing asset file!');
+    }
+
+    return completer.future;
+  }
+
+  void fetchAllCapters() async {
+    setState(() {
+      isChaptersLoading = true;
+    });
+    final response = await http.get(
+      Uri.parse(
+        "https://yevklx5za1.execute-api.ap-south-1.amazonaws.com/chapters",
+      ),
+    );
+
+    String responseData = utf8.decode(response.bodyBytes);
+
+    final data = json.decode(responseData);
+    if (data['status'] == 'success') {
+      final chaptersList = data['body']['chapters'] as List;
+      setState(() {
+        chapters = chaptersList.map((e) => e['name'] as String).toList();
+        isChaptersLoading = false;
+      });
+    } else {
+      // Handle error, maybe show a snackbar or something
+      setState(() {
+        isChaptersLoading = false;
+      });
+    }
+  }
+
+  void handleChapterClick(String chapter, BuildContext context) async {
+    final file = await createFileOfPdfUrl(chapter);
+    final prefs = await SharedPreferences.getInstance();
+    prefs.setString('current-chapter', chapter);
+
+    await OpenFilex.open(file.path);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Charlie Wade')),
+      body: Builder(
+        builder: (context) {
+          if (chapters.isEmpty && !isChaptersLoading) {
+            return Center(
+              child: ElevatedButton(
+                onPressed: () async {
+                  final prefs = await SharedPreferences.getInstance();
+                  prefs.remove('current-chapter');
+
+                  fetchAllCapters();
+                },
+                child: const Text('Reload'),
+              ),
+            );
+          }
+
+          if (isChaptersLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          return ListView.separated(
+            separatorBuilder: (context, index) => const Divider(height: 3),
+            itemBuilder: (context, index) {
+              return ListTile(
+                onTap: () => handleChapterClick(chapters[index], context),
+                dense: true,
+                title: Text(chapters[index]),
+              );
+            },
+            itemCount: chapters.length,
+          );
+        },
+      ),
+    );
+  }
+}
