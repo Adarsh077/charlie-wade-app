@@ -33,13 +33,19 @@ class _ChaptersScreenState extends State<ChaptersScreen> {
     if (currentChapter != null) {
       // ignore: use_build_context_synchronously
       final file = await createFileOfPdfUrl(currentChapter);
-      print("IP: ${prefs.getInt('current-chapter-${file.path}')}");
+      int initialPage = 1;
+      if (prefs.getInt('current-chapter-$currentChapter') == null) {
+        initialPage = await getLastReadPage(currentChapter);
+        prefs.setInt('current-chapter-$currentChapter', initialPage);
+      }
+
       Navigator.push(
         context,
         MaterialPageRoute(
           builder: (context) => PdfScreen(
             file.path,
-            initialPage: prefs.getInt('current-chapter-${file.path}') ?? 1,
+            initialPage: initialPage,
+            chapter: currentChapter,
           ),
         ),
       );
@@ -77,6 +83,29 @@ class _ChaptersScreenState extends State<ChaptersScreen> {
     return completer.future;
   }
 
+  Future<int> getLastReadPage(String chapter) async {
+    try {
+      final response = await http.get(
+        Uri.parse(
+          "https://yevklx5za1.execute-api.ap-south-1.amazonaws.com/chapters/$chapter/page",
+        ),
+      );
+
+      String responseData = utf8.decode(response.bodyBytes);
+      final data = json.decode(responseData);
+
+      if (data['status'] == 'success') {
+        return data['body']['page'] as int;
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error getting last read page: $e');
+      }
+    }
+
+    return 1; // Default page
+  }
+
   void fetchAllCapters() async {
     setState(() {
       isChaptersLoading = true;
@@ -109,13 +138,17 @@ class _ChaptersScreenState extends State<ChaptersScreen> {
     final prefs = await SharedPreferences.getInstance();
     prefs.setString('current-chapter', chapter);
 
+    int initialPage = 1;
+    if (prefs.getInt('current-chapter-$chapter') == null) {
+      initialPage = await getLastReadPage(chapter);
+      prefs.setInt('current-chapter-$chapter', initialPage);
+    }
+
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => PdfScreen(
-          file.path,
-          initialPage: prefs.getInt('current-chapter-${file.path}') ?? 1,
-        ),
+        builder: (context) =>
+            PdfScreen(file.path, initialPage: initialPage, chapter: chapter),
       ),
     );
     // await OpenFilex.open(file.path);

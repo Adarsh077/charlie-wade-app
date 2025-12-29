@@ -1,13 +1,22 @@
+import 'dart:convert';
+
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:pdfrx/pdfrx.dart';
 import 'package:easy_debounce/easy_debounce.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
 
 class PdfScreen extends StatefulWidget {
-  PdfScreen(this.pdfUrl, {Key? key, this.initialPage = 1}) : super(key: key);
+  PdfScreen(
+    this.pdfUrl, {
+    Key? key,
+    required this.chapter,
+    this.initialPage = 1,
+  }) : super(key: key);
 
   final String pdfUrl;
+  final String chapter;
   final int initialPage;
 
   @override
@@ -49,9 +58,23 @@ class _PdfScreenState extends State<PdfScreen> {
   }
 
   Future<void> onPageChange(int page) async {
-    print('$page');
     final prefs = await SharedPreferences.getInstance();
     prefs.setInt('current-chapter-${widget.pdfUrl}', page);
+    await saveLastPageRead(page);
+  }
+
+  Future<void> saveLastPageRead(int page) async {
+    try {
+      await http.put(
+        Uri.parse(
+          "https://yevklx5za1.execute-api.ap-south-1.amazonaws.com/chapters/${widget.chapter}/page",
+        ),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'page': page}),
+      );
+    } catch (e) {
+      // Silently ignore errors
+    }
   }
 
   @override
