@@ -2,10 +2,10 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:charlie_wade/pdf.screen.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -33,7 +33,18 @@ class _ChaptersScreenState extends State<ChaptersScreen> {
     if (currentChapter != null) {
       // ignore: use_build_context_synchronously
       final file = await createFileOfPdfUrl(currentChapter);
-      await OpenFilex.open(file.path);
+      print("IP: ${prefs.getInt('current-chapter-${file.path}')}");
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => PdfScreen(
+            file.path,
+            initialPage: prefs.getInt('current-chapter-${file.path}') ?? 1,
+          ),
+        ),
+      );
+
+      // await OpenFilex.open(file.path);
     } else {
       fetchAllCapters();
     }
@@ -98,7 +109,16 @@ class _ChaptersScreenState extends State<ChaptersScreen> {
     final prefs = await SharedPreferences.getInstance();
     prefs.setString('current-chapter', chapter);
 
-    await OpenFilex.open(file.path);
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PdfScreen(
+          file.path,
+          initialPage: prefs.getInt('current-chapter-${file.path}') ?? 1,
+        ),
+      ),
+    );
+    // await OpenFilex.open(file.path);
   }
 
   @override

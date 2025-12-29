@@ -1,3 +1,4 @@
+// import 'package:charlie_wade/chapters.screen.dart';
 import 'package:charlie_wade/chapters.screen.dart';
 import 'package:flutter/material.dart';
 
@@ -14,7 +15,7 @@ class MainApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       themeMode: ThemeMode.dark,
       darkTheme: ThemeData.dark(useMaterial3: true),
-      home: const ChaptersScreen(),
+      home: ChaptersScreen(),
     );
   }
 }
