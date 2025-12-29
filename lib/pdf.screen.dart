@@ -59,7 +59,7 @@ class _PdfScreenState extends State<PdfScreen> {
 
   Future<void> onPageChange(int page) async {
     final prefs = await SharedPreferences.getInstance();
-    prefs.setInt('current-chapter-${widget.pdfUrl}', page);
+    prefs.setInt('current-chapter-${widget.chapter}', page);
     await saveLastPageRead(page);
   }
 

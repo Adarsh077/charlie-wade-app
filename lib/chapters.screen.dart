@@ -33,8 +33,8 @@ class _ChaptersScreenState extends State<ChaptersScreen> {
     if (currentChapter != null) {
       // ignore: use_build_context_synchronously
       final file = await createFileOfPdfUrl(currentChapter);
-      int initialPage = 1;
-      if (prefs.getInt('current-chapter-$currentChapter') == null) {
+      int? initialPage = prefs.getInt('current-chapter-$currentChapter');
+      if (initialPage == null) {
         initialPage = await getLastReadPage(currentChapter);
         prefs.setInt('current-chapter-$currentChapter', initialPage);
       }
@@ -44,7 +44,7 @@ class _ChaptersScreenState extends State<ChaptersScreen> {
         MaterialPageRoute(
           builder: (context) => PdfScreen(
             file.path,
-            initialPage: initialPage,
+            initialPage: initialPage ?? 1,
             chapter: currentChapter,
           ),
         ),
@@ -138,8 +138,8 @@ class _ChaptersScreenState extends State<ChaptersScreen> {
     final prefs = await SharedPreferences.getInstance();
     prefs.setString('current-chapter', chapter);
 
-    int initialPage = 1;
-    if (prefs.getInt('current-chapter-$chapter') == null) {
+    int? initialPage = prefs.getInt('current-chapter-$chapter');
+    if (initialPage == null) {
       initialPage = await getLastReadPage(chapter);
       prefs.setInt('current-chapter-$chapter', initialPage);
     }
@@ -147,8 +147,11 @@ class _ChaptersScreenState extends State<ChaptersScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) =>
-            PdfScreen(file.path, initialPage: initialPage, chapter: chapter),
+        builder: (context) => PdfScreen(
+          file.path,
+          initialPage: initialPage ?? 1,
+          chapter: chapter,
+        ),
       ),
     );
     // await OpenFilex.open(file.path);
