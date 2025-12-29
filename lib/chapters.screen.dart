@@ -19,6 +19,8 @@ class ChaptersScreen extends StatefulWidget {
 class _ChaptersScreenState extends State<ChaptersScreen> {
   List<String> chapters = [];
   bool isChaptersLoading = false;
+  String? currentChapter;
+  String? downloadingChapter;
 
   @override
   void initState() {
@@ -121,8 +123,12 @@ class _ChaptersScreenState extends State<ChaptersScreen> {
     final data = json.decode(responseData);
     if (data['status'] == 'success') {
       final chaptersList = data['body']['chapters'] as List;
+      final prefs = await SharedPreferences.getInstance();
+      final current = prefs.getString('current-chapter');
+
       setState(() {
         chapters = chaptersList.map((e) => e['name'] as String).toList();
+        currentChapter = current;
         isChaptersLoading = false;
       });
     } else {
@@ -134,9 +140,18 @@ class _ChaptersScreenState extends State<ChaptersScreen> {
   }
 
   void handleChapterClick(String chapter, BuildContext context) async {
+    setState(() {
+      downloadingChapter = chapter;
+    });
+
     final file = await createFileOfPdfUrl(chapter);
     final prefs = await SharedPreferences.getInstance();
     prefs.setString('current-chapter', chapter);
+
+    setState(() {
+      currentChapter = chapter;
+      downloadingChapter = null;
+    });
 
     int? initialPage = prefs.getInt('current-chapter-$chapter');
     if (initialPage == null) {
@@ -184,10 +199,23 @@ class _ChaptersScreenState extends State<ChaptersScreen> {
           return ListView.separated(
             separatorBuilder: (context, index) => const Divider(height: 3),
             itemBuilder: (context, index) {
+              final isCurrentChapter = chapters[index] == currentChapter;
+              final isDownloading = chapters[index] == downloadingChapter;
               return ListTile(
-                onTap: () => handleChapterClick(chapters[index], context),
+                onTap: isDownloading
+                    ? null
+                    : () => handleChapterClick(chapters[index], context),
                 dense: true,
                 title: Text(chapters[index]),
+                trailing: isDownloading
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : isCurrentChapter
+                    ? const Icon(Icons.check_circle)
+                    : null,
               );
             },
             itemCount: chapters.length,
