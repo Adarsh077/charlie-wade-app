@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Charlie Wade
+Comment=My Flutter Application
+# This must match the name of the symlink in /usr/bin (usually your app name)
+Exec=charlie_wade
+# This is the name of your icon file (without .png)
+Icon=charlie_wade
+Terminal=false
+Categories=Utility;

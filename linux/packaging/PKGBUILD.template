@@ -1,0 +1,31 @@
+pkgname="{{APP_NAME}}-bin"
+pkgver="{{APP_VERSION}}"
+pkgrel=1
+pkgdesc="Flutter Application"
+arch=('x86_64')
+url="https://github.com/Adarsh077/charlie-wade-app"
+license=('MIT')
+depends=('gtk3' 'libx11' 'xdg-utils')
+source=("{{TAR_FILENAME}}")
+sha256sums=('{{APP_HASH}}')
+
+package() {
+  install -d "${pkgdir}/opt/${pkgname/-bin/}"
+  install -d "${pkgdir}/usr/bin"
+  install -d "${pkgdir}/usr/share/applications"
+
+  cp -r "${srcdir}/"* "${pkgdir}/opt/${pkgname/-bin/}/"
+
+  ln -s "/opt/${pkgname/-bin/}/{{EXE_NAME}}" "${pkgdir}/usr/bin/${pkgname/-bin/}"
+
+  chmod 755 "${pkgdir}/opt/${pkgname/-bin/}/{{EXE_NAME}}"
+
+  local icon_file=$(find "${pkgdir}/opt/${pkgname/-bin/}" -name "*.png" | head -n 1)
+  if [ -n "$icon_file" ]; then
+      # Install to /usr/share/pixmaps so the system finds it
+      install -Dm644 "$icon_file" "${pkgdir}/usr/share/pixmaps/${pkgname/-bin/}.png"
+  fi
+
+  # Install desktop file
+  install -Dm644 "${srcdir}/{{APP_NAME}}.desktop" "${pkgdir}/usr/share/applications/{{APP_NAME}}.desktop"
+}
