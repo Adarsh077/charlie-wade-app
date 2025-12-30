@@ -9,3 +9,4 @@ Exec=charlie_wade
 Icon=charlie_wade
 Terminal=false
 Categories=Utility;
+StartupWMClass=com.example.charlie_wade
