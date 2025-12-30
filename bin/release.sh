@@ -46,18 +46,17 @@ else
     echo "⚠️  WARNING: No .png icon found in linux/!"
 fi
 
-cd "$BUILD_DIR"
-tar -czf "$DIST_DIR/$TAR_FILENAME" ./*
-cd "$PROJECT_ROOT"
-
-APP_HASH=$(sha256sum "$DIST_DIR/$TAR_FILENAME" | awk '{print $1}')
-echo "   Hash: $APP_HASH"
-
-echo "📝 Generating PKGBUILD..."
 rm -rf "$TEMP_BUILD_DIR"
 mkdir -p "$TEMP_BUILD_DIR"
 
-cp "$DIST_DIR/$TAR_FILENAME" "$TEMP_BUILD_DIR/"
+cd "$BUILD_DIR"
+tar -czf "$TEMP_BUILD_DIR/$TAR_FILENAME" ./*
+cd "$PROJECT_ROOT"
+
+APP_HASH=$(sha256sum "$TEMP_BUILD_DIR/$TAR_FILENAME" | awk '{print $1}')
+echo "   Hash: $APP_HASH"
+
+echo "📝 Generating PKGBUILD..."
 sed \
     -e "s/{{APP_NAME}}/$APP_NAME/g" \
     -e "s/{{APP_VERSION}}/$APP_VERSION/g" \
@@ -71,7 +70,7 @@ cd "$TEMP_BUILD_DIR"
 makepkg -f
 
 echo "🚚 Moving artifacts to dist/..."
-mv *.pkg.tar.zst "$DIST_DIR/"
+mv ./*.pkg.tar.zst "$DIST_DIR/"
 
 cd "$PROJECT_ROOT"
 rm -rf "$TEMP_BUILD_DIR"

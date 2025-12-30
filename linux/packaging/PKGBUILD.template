@@ -8,6 +8,7 @@ license=('MIT')
 depends=('gtk3' 'libx11' 'xdg-utils')
 source=("{{TAR_FILENAME}}")
 sha256sums=('{{APP_HASH}}')
+options=('!debug')
 
 package() {
   install -d "${pkgdir}/opt/${pkgname/-bin/}"
