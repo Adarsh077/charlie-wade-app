@@ -1,5 +1,5 @@
 import 'dart:convert';
-
+import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:pdfrx/pdfrx.dart';
@@ -91,11 +91,12 @@ class _PdfScreenState extends State<PdfScreen> {
     final statusBarHeight = MediaQuery.viewPaddingOf(context).top + 50;
 
     return Scaffold(
+      appBar: Platform.isLinux ? AppBar(leading: BackButton()) : null,
       body: PdfViewer.file(
         widget.pdfUrl,
         controller: _pdfController,
         params: PdfViewerParams(
-          scrollByMouseWheel: 0.5,
+          scrollByMouseWheel: Platform.isLinux ? 0.8 : 0.5,
           scrollPhysics: ClampingScrollPhysics(),
           backgroundColor: Colors.black,
           onViewerReady: (document, controller) {
@@ -129,7 +130,9 @@ class _PdfScreenState extends State<PdfScreen> {
             ];
           },
 
-          boundaryMargin: EdgeInsets.only(top: statusBarHeight),
+          boundaryMargin: EdgeInsets.only(
+            top: Platform.isLinux ? 0 : statusBarHeight,
+          ),
         ),
       ),
     );

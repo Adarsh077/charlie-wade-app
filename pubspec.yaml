@@ -14,6 +14,7 @@ dependencies:
   open_filex: ^4.7.0
   path_provider: ^2.1.5
   pdfrx: ^2.2.18
+  rename_app: ^1.6.5
   shared_preferences: ^2.5.4
 
 dev_dependencies:
