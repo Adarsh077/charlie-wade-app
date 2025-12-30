@@ -4,7 +4,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:pdfrx/pdfrx.dart';
 import 'package:easy_debounce/easy_debounce.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
 class PdfScreen extends StatefulWidget {
@@ -58,8 +57,6 @@ class _PdfScreenState extends State<PdfScreen> {
   }
 
   Future<void> onPageChange(int page) async {
-    final prefs = await SharedPreferences.getInstance();
-    prefs.setInt('current-chapter-${widget.chapter}', page);
     await saveLastPageRead(page);
   }
 
