@@ -33,11 +33,17 @@ class _ChaptersScreenState extends State<ChaptersScreen> {
     final prefs = await SharedPreferences.getInstance();
     final currentChapter = prefs.getString('current-chapter');
     if (currentChapter != null) {
+      setState(() {
+        isChaptersLoading = true;
+      });
       // ignore: use_build_context_synchronously
       final file = await createFileOfPdfUrl(currentChapter);
       int initialPage = await getLastReadPage(currentChapter);
-
+      setState(() {
+        isChaptersLoading = false;
+      });
       Navigator.push(
+        // ignore: use_build_context_synchronously
         context,
         MaterialPageRoute(
           builder: (context) => PdfScreen(
@@ -171,9 +177,6 @@ class _ChaptersScreenState extends State<ChaptersScreen> {
             return Center(
               child: ElevatedButton(
                 onPressed: () async {
-                  final prefs = await SharedPreferences.getInstance();
-                  prefs.remove('current-chapter');
-
                   fetchAllCapters();
                 },
                 child: const Text('Reload'),
