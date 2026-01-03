@@ -86,9 +86,11 @@ class _PdfScreenState extends State<PdfScreen> {
   @override
   Widget build(BuildContext context) {
     final statusBarHeight = MediaQuery.viewPaddingOf(context).top + 50;
+    final isDesktop =
+        Platform.isLinux || Platform.isMacOS || Platform.isWindows;
 
     return Scaffold(
-      appBar: Platform.isLinux ? AppBar(leading: BackButton()) : null,
+      appBar: isDesktop ? AppBar(leading: BackButton()) : null,
       body: PdfViewer.file(
         widget.pdfUrl,
         controller: _pdfController,
